@@ -1,0 +1,57 @@
+name: app
+description: The App project.
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
+version: 1.0.0
+
+resolution: workspace
+
+environment:
+  sdk: ^3.8.0
+
+dependencies:
+  async_redux: ^25.4.0
+  business:
+    path: ../business
+  equatable: ^2.0.7
+  flame: ^1.32.0
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  go_router: ^16.0.0
+  localization:
+    path: ../localization
+  pro_pretty_logging: ^2.0.0
+  pro_validator: ^2.0.1
+  ui:
+    path: ../ui
+  window_manager: ^0.5.0
+  
+dev_dependencies:
+  flutter_launcher_icons: ^0.14.4
+  pro_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    # BASE_URL="http://localhost:8080"
+    - .env
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "images/logo.png"
+  min_sdk_android: 21
+  web:
+    generate: true
+    image_path: "images/logo.png"
+    background_color: "#hexcode"
+    theme_color: "#hexcode"
+  windows:
+    generate: true
+    image_path: "images/logo.png"
+    icon_size: 48
+  macos:
+    generate: true
+    image_path: "images/logo.png"

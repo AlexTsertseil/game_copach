@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# Bash script for sequential build of packages in strict order
+
+source $(dirname $0)/log
+
+pushd () {
+    command pushd "$@" > /dev/null
+}
+
+popd () {
+    command popd "$@" > /dev/null
+}
+
+export pushd popd
+
+function build_package() {
+    local package_name=$1
+    local package_path=$2
+    local needs_build_runner=$3
+
+    log "Building package: $package_name"
+    pushd $package_path
+
+    if [ "$needs_build_runner" = true ]; then
+        log "Running build_runner for $package_name"
+        dart run build_runner build --delete-conflicting-outputs
+    fi
+
+    popd
+    log "Completed: $package_name"
+    echo ""
+}
+
+function main() {
+    log "Starting sequential build of all packages"
+    echo ""
+
+    # Build packages in strict order
+    build_package "localization" "../localization" false
+    build_package "storage" "../storage" false
+    build_package "models" "../models" true
+    build_package "http_client" "../http_client" true
+    build_package "business" "../business" true
+    build_package "ui" "../ui" true
+    build_package "app" "../app" true
+
+    log "Sequential build completed successfully!"
+}
+
+main 

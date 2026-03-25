@@ -1,0 +1,149 @@
+name: ommunism
+publish_to: https://github.com/gencto/-ommunism
+environment:
+  sdk: ^3.8.0
+
+dev_dependencies:
+  melos: ^7.0.0-dev.8
+
+workspace:
+  - app
+  - business
+  - http_client
+  - localization
+  - models
+  - storage
+  - ui
+
+melos:
+  scripts:
+    cleanup:
+      description: "Cleanup all packages - format code, rebuild generated files, and clean iOS/Android dependencies"
+      run: |
+        if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "win32" ]]; then
+          powershell -ExecutionPolicy Bypass -File scripts/cleanup.ps1
+        else
+          bash scripts/cleanup
+        fi
+      env:
+        OSTYPE: $OSTYPE
+
+    cleanup:format:
+      description: "Format code in all packages"
+      run: |
+        melos exec -c 1 -- "dart format ."
+
+    build:sequential:
+      description: "Build all packages in strict sequential order"
+      run: |
+        powershell -ExecutionPolicy Bypass -File scripts/build_sequential.ps1
+
+    generate:build:
+      description: "Generate build files with automatic dependency resolution"
+      packageFilters:
+        dependsOn: build_runner
+      run: |
+        melos exec --depends-on=build_runner -- "dart run build_runner build --delete-conflicting-outputs"
+
+    generate:watch:
+      description: "Watch and generate build files with automatic dependency resolution"
+      packageFilters:
+        dependsOn: build_runner
+      run: |
+        melos exec --depends-on=build_runner -- "dart run build_runner watch --delete-conflicting-outputs"
+
+    generate:clean:
+      description: "Clean generated build files"
+      packageFilters:
+        dependsOn: build_runner
+      run: |
+        melos exec --depends-on=build_runner -- "dart run build_runner clean"
+
+    cleanup:ios:
+      description: "Clean iOS dependencies (Podfile.lock)"
+      run: |
+        echo "Skipping Podfile cleanup on Windows."
+      env:
+        OSTYPE: $OSTYPE
+
+    beta:app:
+      description: "Build and deploy app beta version"
+      run: |
+        build_env=${1:-main}
+        firebase_groups=${2:-"qa, customers"}
+        echo "Building patient app - env: $build_env, groups: $firebase_groups"
+
+        pushd app/ios
+        bundle install
+        pod repo update
+        bundle exec fastlane beta env:$build_env groups:"$firebase_groups"
+        popd
+
+        pushd app/android
+        bundle install
+        bundle exec fastlane beta env:$build_env groups:"$firebase_groups"
+        popd
+
+    flutter:clean:
+      description: "Clean Flutter project"
+      run: flutter clean
+
+    flutter:upgrade:
+      description: "Upgrade Flutter dependencies"
+      run: flutter pub upgrade
+
+    workspace:list:
+      description: "List all workspace packages"
+      run: dart pub workspace list
+
+    format:all:
+      description: "Format all Dart files in the workspace"
+      run: |
+        melos exec -c 1 -- "dart format ."
+
+    analyze:all:
+      description: "Analyze all packages"
+      run: |
+        melos exec -c 1 -- "dart analyze"
+
+    test:all:
+      description: "Run tests in all packages"
+      run: |
+        melos exec -c 1 -- "dart test"
+      packageFilters:
+        scope: "*"
+        ignore: ["templates"]
+
+    app:
+      description: "Run Flutter app"
+      run: flutter app
+
+    pods:install:
+      description: "Install iOS pods for all apps"
+      run: |
+        echo "Skipping pod install on Windows."
+      env:
+        OSTYPE: $OSTYPE
+
+    setup:all:
+      description: "Complete setup - upgrade, format, rebuild, and install pods"
+      steps:
+        - melos run flutter:clean
+        - melos run flutter:upgrade
+        - melos run format:all
+        - melos run build:sequential
+        - melos run pods:install
+
+    dev:start:
+      description: "Start development environment"
+      run: melos run format:all && melos run generate:build && melos run analyze:all
+
+    ci:check:
+      description: "Run CI checks - format, analyze, test"
+      run: melos run format:all && melos run analyze:all && melos run test:all
+
+    release:prepare:
+      description: "Prepare for release - clean, format, rebuild, test"
+      run: melos run flutter:clean && melos run format:all && melos run generate:build && melos run test:all && melos run analyze:all
+dependencies:
+  flame: ^1.32.0
