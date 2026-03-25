@@ -4,7 +4,6 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:localization/localization.dart';
-import 'package:ui/theme/common.dart';
 
 import 'connectors/top_level_page_connector.dart';
 import 'navigation/routers_flow.dart';
@@ -32,8 +31,7 @@ class _AppConnectorState extends State<AppConnector> {
         debugShowCheckedModeBanner: false,
         routerDelegate: router.routerDelegate,
         routeInformationProvider: router.routeInformationProvider,
-        theme: lightTheme(),
-        darkTheme: darkTheme(),
+
         themeMode: ThemeMode.light,
         routeInformationParser: router.routeInformationParser,
         localizationsDelegates: const [
